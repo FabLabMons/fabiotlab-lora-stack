@@ -8,12 +8,6 @@ services:
     privileged: true
     depends_on: 
       - gateway-bridge
-    devices:
-      - "/dev/i2c-1:/dev/i2c-1"
-      - "/dev/mem:/dev/mem"
-      - "/dev/ttyACM0:/dev/ttyACM0"
-    cap_add:
-      - SYS_RAWIO
 
   gateway-bridge:
     build: ./gateway-bridge
