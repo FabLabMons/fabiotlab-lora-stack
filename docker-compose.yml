@@ -19,7 +19,6 @@ services:
       - redis
     ports:
       - 8080:8080
-
     
   gateway-bridge:
     build: ./gateway-bridge
