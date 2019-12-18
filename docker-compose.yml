@@ -1,15 +1,6 @@
 version: "2"
 
 services:
-  network-server:
-    build: ./network-server
-    restart: unless-stopped
-    depends_on: 
-      - mosquitto
-      - postgresql
-      - redis
-      - application-server
-
   application-server:
     build: ./application-server
     restart: unless-stopped
@@ -19,14 +10,15 @@ services:
       - redis
     ports:
       - 8080:8080
-    
-  gateway-bridge:
-    build: ./gateway-bridge
+
+  network-server:
+    build: ./network-server
     restart: unless-stopped
     depends_on: 
       - mosquitto
-    ports:
-      - 1700:1700/udp
+      - postgresql
+      - redis
+      - application-server
 
   packet_forwarder:
     build: ./packet_forwarder
@@ -35,6 +27,14 @@ services:
     privileged: true
     depends_on: 
       - gateway-bridge
+
+  gateway-bridge:
+    build: ./gateway-bridge
+    restart: unless-stopped
+    depends_on: 
+      - mosquitto
+    ports:
+      - 1700:1700/udp
 
   postgresql:
     build: ./postgresql
