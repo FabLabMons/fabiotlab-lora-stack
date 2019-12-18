@@ -1,4 +1,4 @@
-FROM golang:1.13-alpine AS development
+FROM balenalib/%%BALENA_MACHINE_NAME%%-alpine-golang:latest-build AS development
 
 ENV PROJECT_PATH=/chirpstack-gateway-bridge
 ENV PATH=$PATH:$PROJECT_PATH/build
@@ -14,9 +14,10 @@ WORKDIR $PROJECT_PATH
 RUN make dev-requirements
 RUN make
 
-FROM alpine:latest AS production
+FROM balenalib/%%BALENA_MACHINE_NAME%%-alpine:latest AS production
 
 WORKDIR /root/
 RUN apk --no-cache add ca-certificates
 COPY --from=development /chirpstack-gateway-bridge/build/chirpstack-gateway-bridge .
+COPY chirpstack-gateway-bridge.toml /etc/chirpstack-gateway-bridge/chirpstack-gateway-bridge.toml
 ENTRYPOINT ["./chirpstack-gateway-bridge"]
