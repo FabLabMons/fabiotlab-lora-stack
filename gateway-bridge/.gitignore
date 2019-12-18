@@ -4,9 +4,6 @@
 # Vagrant
 Vagrantfile
 
-# configuration files
-/*.toml
-
 # coverage file
 /coverage.out
 
