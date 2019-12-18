@@ -1,13 +1,14 @@
 version: "2"
 
 services:
-  packet_forwarder:
-    build: ./packet_forwarder
+  network-server:
+    build: ./network-server
     restart: unless-stopped
-    env_file: ./packet_forwarder.env
-    privileged: true
     depends_on: 
-      - gateway-bridge
+      - mosquitto
+      - postgresql
+      - redis
+      - application-server
 
   gateway-bridge:
     build: ./gateway-bridge
@@ -16,6 +17,14 @@ services:
       - mosquitto
     ports:
       - 1700:1700/udp
+
+  packet_forwarder:
+    build: ./packet_forwarder
+    restart: unless-stopped
+    env_file: ./packet_forwarder.env
+    privileged: true
+    depends_on: 
+      - gateway-bridge
 
   postgresql:
     build: ./postgresql
