@@ -1,4 +1,4 @@
-FROM golang:1.13-alpine AS development
+FROM balenalib/%%BALENA_MACHINE_NAME%%-alpine-golang:latest-build AS development
 
 ENV PROJECT_PATH=/chirpstack-application-server
 ENV PATH=$PATH:$PROJECT_PATH/build
@@ -14,9 +14,10 @@ WORKDIR $PROJECT_PATH
 RUN make dev-requirements ui-requirements
 RUN make
 
-FROM alpine:latest AS production
+FROM balenalib/%%BALENA_MACHINE_NAME%%-alpine:latest AS production
 
 WORKDIR /root/
 RUN apk --no-cache add ca-certificates
 COPY --from=development /chirpstack-application-server/build/chirpstack-application-server .
+COPY chirpstack-application-server.toml /etc/chirpstack-application-server/chirpstack-application-server.toml
 ENTRYPOINT ["./chirpstack-application-server"]
