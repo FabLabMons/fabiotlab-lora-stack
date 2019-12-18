@@ -1,0 +1,3 @@
+[submodule "ttn-resin-gateway-rpi"]
+	path = ttn-resin-gateway-rpi
+	url = https://github.com/jpmeijers/ttn-resin-gateway-rpi.git

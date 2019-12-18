@@ -1,6 +1,11 @@
 version: "2"
 
 services:
+  packet_forwarder:
+    build: ./ttn-resin-gateway-rpi
+    restart: unless-stopped
+    env_file: ./packet_forwarder.env
+
   postgresql:
     build: ./postgresql
     restart: unless-stopped
