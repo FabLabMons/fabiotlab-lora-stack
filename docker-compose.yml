@@ -5,6 +5,7 @@ services:
     build: ./packet_forwarder
     restart: unless-stopped
     env_file: ./packet_forwarder.env
+    privileged: true
     depends_on: 
       - gateway-bridge
     devices:
