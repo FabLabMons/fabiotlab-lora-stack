@@ -1,0 +1,47 @@
+project_name: chirpstack-network-server
+
+builds:
+  - main: cmd/chirpstack-network-server/main.go
+    binary: chirpstack-network-server
+    goos:
+      - windows
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - 386
+      - arm
+      - arm64
+    goarm:
+      - 5
+      - 6
+      - 7
+    ignore:
+      - goos: darwin
+        goarch: 386
+
+release:
+  disable: true
+
+nfpm:
+  vendor: ChirpStack
+  homepage: https://www.chirpstack.io/
+  maintainer: Orne Brocaar <info@brocaar.com>
+  description: ChirpStack Network Server
+  license: MIT
+  formats:
+    - deb
+    - rpm
+  bindir: /usr/bin
+  files:
+    "packaging/files/chirpstack-network-server.rotate": "/etc/logrotate.d/chirpstack-network-server"
+    "packaging/files/chirpstack-network-server.init": "/usr/lib/chirpstack-network-server/scripts/chirpstack-network-server.init"
+    "packaging/files/chirpstack-network-server.service": "/usr/lib/chirpstack-network-server/scripts/chirpstack-network-server.service"
+    "packaging/files/chirpstack-network-server-eu868.toml": "/etc/chirpstack-network-server/examples/chirpstack-network-server-eu868.toml"
+    "packaging/files/chirpstack-network-server-us915.toml": "/etc/chirpstack-network-server/examples/chirpstack-network-server-us915.toml"
+  config_files:
+    "packaging/files/chirpstack-network-server.toml": "/etc/chirpstack-network-server/chirpstack-network-server.toml"
+  scripts:
+    preinstall: "packaging/scripts/pre-install.sh"
+    postinstall: "packaging/scripts/post-install.sh"
+    postremove: "packaging/scripts/post-remove.sh"
