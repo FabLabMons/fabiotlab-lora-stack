@@ -47,4 +47,4 @@ name="EU_863_870"
 server="tcp://mosquitto:1883"
 
 [join_server.default]
-server="http://chirpstack-application-server:8003"
+server="http://application-server:8003"

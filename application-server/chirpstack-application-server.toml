@@ -11,7 +11,7 @@ url="redis://redis:6379"
 server="tcp://mosquitto:1883"
 
 [application_server.api]
-public_host="chirpstack-application-server:8001"
+public_host="application-server:8001"
 
 [application_server.external_api]
 bind="0.0.0.0:8080"
