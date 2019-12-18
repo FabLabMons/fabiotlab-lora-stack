@@ -10,6 +10,17 @@ services:
       - redis
       - application-server
 
+  application-server:
+    build: ./application-server
+    restart: unless-stopped
+    depends_on: 
+      - mosquitto
+      - postgresql
+      - redis
+    ports:
+      - 8080:8080
+
+    
   gateway-bridge:
     build: ./gateway-bridge
     restart: unless-stopped
