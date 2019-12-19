@@ -1,15 +1,30 @@
 version: "2"
 
 services:
-  application-server:
-    build: ./application-server
-    restart: unless-stopped
-    depends_on: 
-      - mosquitto
-      - postgresql
-      - redis
+  nginx:
+    build: ./nginx
+    depends_on:
+      - nodered
+      - application-server
     ports:
-      - 8080:8080
+      - "80:80"
+
+  nodered:
+    build: ./nodered
+    restart: unless-stopped
+    depends_on:
+      - mosquitto
+    privileged: true
+    labels:
+      io.balena.features.supervisor-api: '1'
+    volumes:
+      - "nodereddata:/data"
+    devices:
+      - "/dev/mem:/dev/mem"
+      - "/dev/gpiomem:/dev/gpiomem"
+      - "/dev/i2c-1:/dev/i2c-1"
+    cap_add:
+      - SYS_RAWIO
 
   network-server:
     build: ./network-server
@@ -20,19 +35,34 @@ services:
       - redis
       - application-server
 
+  application-server:
+    build: ./application-server
+    restart: unless-stopped
+    depends_on: 
+      - mosquitto
+      - postgresql
+      - redis
+
   packet_forwarder:
     build: ./packet_forwarder
     restart: unless-stopped
+    depends_on: 
+      - gateway-bridge
     environment:
+      - SERVER_TTN=true
       - SERVER_1_ENABLED=true
       - SERVER_1_ADDRESS=gateway-bridge
       - SERVER_1_PORTUP=1700
       - SERVER_1_PORTDOWN=1700
       - SERVER_1_DOWNLINK=true
-      
     privileged: true
-    depends_on: 
-      - gateway-bridge
+    devices:
+      - "/dev/mem:/dev/mem"
+      - "/dev/gpiomem:/dev/gpiomem"
+      - "/dev/i2c-1:/dev/i2c-1"
+    cap_add:
+      - SYS_RAWIO
+  
 
   gateway-bridge:
     build: ./gateway-bridge
@@ -40,19 +70,19 @@ services:
     depends_on: 
       - mosquitto
     ports:
-      - 1700:1700/udp
+      - "1700:1700/udp"
 
   postgresql:
     build: ./postgresql
     restart: unless-stopped
     volumes:
-      - postgresqldata:/var/lib/postgresql/data
+      - "postgresqldata:/var/lib/postgresql/data"
 
   redis:
     image: arm32v7/redis:5-alpine
     restart: unless-stopped
     volumes:
-      - redisdata:/data
+      - "redisdata:/data"
 
   mosquitto:
     image: arm32v6/eclipse-mosquitto
@@ -63,3 +93,4 @@ services:
 volumes:
   postgresqldata:
   redisdata:
+  nodereddata:

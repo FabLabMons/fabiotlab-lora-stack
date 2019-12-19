@@ -1,0 +1,7 @@
+{
+    "name": "fabiotlab-nodered",
+    "description": "Fab-IoT-Lab Node-RED for LoRa fullstack network",
+    "version": "0.0.1",
+    "dependencies": {},
+    "node-red": {}
+}

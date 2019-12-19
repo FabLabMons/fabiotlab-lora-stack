@@ -18,6 +18,12 @@ FROM balenalib/%%BALENA_MACHINE_NAME%%-alpine:latest AS production
 
 WORKDIR /root/
 RUN apk --no-cache add ca-certificates
+
 COPY --from=development /chirpstack-application-server/build/chirpstack-application-server .
 COPY chirpstack-application-server.toml /etc/chirpstack-application-server/chirpstack-application-server.toml
+
+EXPOSE 8080
+EXPOSE 8001
+EXPOSE 8003
+
 ENTRYPOINT ["./chirpstack-application-server"]

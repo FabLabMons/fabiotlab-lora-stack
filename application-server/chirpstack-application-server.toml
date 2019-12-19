@@ -15,4 +15,4 @@ public_host="application-server:8001"
 
 [application_server.external_api]
 bind="0.0.0.0:8080"
-jwt_secret="verysecret"
+jwt_secret="FabI0T1ab_takes-security°seriously^as°you-can_see!"
