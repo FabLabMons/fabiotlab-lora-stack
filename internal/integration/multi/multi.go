@@ -9,10 +9,9 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	pb "github.com/brocaar/chirpstack-api/go/v3/as/integration"
+	pb "github.com/brocaar/chirpstack-api/go/as/integration"
 	"github.com/brocaar/chirpstack-application-server/internal/config"
 	"github.com/brocaar/chirpstack-application-server/internal/integration"
-	"github.com/brocaar/chirpstack-application-server/internal/integration/amqp"
 	"github.com/brocaar/chirpstack-application-server/internal/integration/awssns"
 	"github.com/brocaar/chirpstack-application-server/internal/integration/azureservicebus"
 	"github.com/brocaar/chirpstack-application-server/internal/integration/gcppubsub"
@@ -59,8 +58,6 @@ func New(m marshaler.Type, confs []interface{}) (*Integration, error) {
 			ii, err = postgresql.New(v)
 		case thingsboard.Config:
 			ii, err = thingsboard.New(v)
-		case config.IntegrationAMQPConfig:
-			ii, err = amqp.New(m, v)
 		default:
 			return nil, fmt.Errorf("unknown configuration type %T", conf)
 		}

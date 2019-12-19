@@ -148,11 +148,6 @@ max_idle=10
 # the timeout to a value less than the server's timeout.
 idle_timeout="5m0s"
 
-# Max active connections in the pool.
-#
-# When zero, there is no limit on the number of connections in the pool.
-max_active=0
-
 
 # Application-server settings.
 [application_server]
@@ -192,7 +187,6 @@ id="6d5db27e-4ce2-4b2b-b5d7-91f069397978"
   # Do not forget to configure the related configuration section below for
   # the enabled integrations. Integrations that can be enabled are:
   # * mqtt              - MQTT broker
-  # * amqp              - AMQP / RabbitMQ
   # * aws_sns           - AWS Simple Notification Service (SNS)
   # * azure_service_bus - Azure Service-Bus
   # * gcp_pub_sub       - Google Cloud Pub/Sub
@@ -242,10 +236,6 @@ id="6d5db27e-4ce2-4b2b-b5d7-91f069397978"
   # Connect with the given password (optional)
   password=""
 
-  # Maximum interval that will be waited between reconnection attempts when connection is lost.
-  # Valid units are 'ms', 's', 'm', 'h'. Note that these values can be combined, e.g. '24h30m15s'.
-  max_reconnect_interval="1m0s"
-
   # Quality of service level
   #
   # 0: at most once
@@ -282,21 +272,6 @@ id="6d5db27e-4ce2-4b2b-b5d7-91f069397978"
 
   # TLS key file (optional)
   tls_key=""
-
-
-  # AMQP / RabbitMQ.
-  [application_server.integration.amqp]
-  # Server URL.
-  #
-  # See for a specification of all the possible options:
-  # https://www.rabbitmq.com/uri-spec.html
-  url="amqp://guest:guest@localhost:5672"
-
-  # Event routing key template.
-  #
-  # This is the event routing-key template used when publishing device
-  # events.
-  event_routing_key_template="application.{{ .ApplicationID }}.device.{{ .DevEUI }}.event.{{ .EventType }}"
 
 
   # AWS Simple Notification Service (SNS)
@@ -355,16 +330,6 @@ id="6d5db27e-4ce2-4b2b-b5d7-91f069397978"
   [application_server.integration.postgresql]
   # PostgreSQL dsn (e.g.: postgres://user:password@hostname/database?sslmode=disable).
   dsn=""
-
-  # This sets the max. number of open connections that are allowed in the
-  # PostgreSQL connection pool (0 = unlimited).
-  max_open_connections=0
-
-  # Max idle connections.
-  #
-  # This sets the max. number of idle connections in the PostgreSQL connection
-  # pool (0 = no idle connections are retained).
-  max_idle_connections=2
 
 
   # Settings for the "internal api"

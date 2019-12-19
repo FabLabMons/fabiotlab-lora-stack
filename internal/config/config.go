@@ -21,7 +21,6 @@ type Config struct {
 	Redis struct {
 		URL         string        `mapstructure:"url"`
 		MaxIdle     int           `mapstructure:"max_idle"`
-		MaxActive   int           `mapstructure:"max_active"`
 		IdleTimeout time.Duration `mapstructure:"idle_timeout"`
 	}
 
@@ -43,7 +42,6 @@ type Config struct {
 			MQTT            IntegrationMQTTConfig       `mapstructure:"mqtt"`
 			GCPPubSub       IntegrationGCPConfig        `mapstructure:"gcp_pub_sub"`
 			PostgreSQL      IntegrationPostgreSQLConfig `mapstructure:"postgresql"`
-			AMQP            IntegrationAMQPConfig       `mapstructure:"amqp"`
 		}
 
 		API struct {
@@ -122,29 +120,28 @@ type Config struct {
 
 // IntegrationMQTTConfig holds the configuration for the MQTT integration.
 type IntegrationMQTTConfig struct {
-	Server                  string        `mapstructure:"server"`
-	Username                string        `mapstructure:"username"`
-	Password                string        `mapstructure:"password"`
-	MaxReconnectInterval    time.Duration `mapstructure:"max_reconnect_interval"`
-	QOS                     uint8         `mapstructure:"qos"`
-	CleanSession            bool          `mapstructure:"clean_session"`
-	ClientID                string        `mapstructure:"client_id"`
-	CACert                  string        `mapstructure:"ca_cert"`
-	TLSCert                 string        `mapstructure:"tls_cert"`
-	TLSKey                  string        `mapstructure:"tls_key"`
-	UplinkTopicTemplate     string        `mapstructure:"uplink_topic_template"`
-	DownlinkTopicTemplate   string        `mapstructure:"downlink_topic_template"`
-	JoinTopicTemplate       string        `mapstructure:"join_topic_template"`
-	AckTopicTemplate        string        `mapstructure:"ack_topic_template"`
-	ErrorTopicTemplate      string        `mapstructure:"error_topic_template"`
-	StatusTopicTemplate     string        `mapstructure:"status_topic_template"`
-	LocationTopicTemplate   string        `mapstructure:"location_topic_template"`
-	UplinkRetainedMessage   bool          `mapstructure:"uplink_retained_message"`
-	JoinRetainedMessage     bool          `mapstructure:"join_retained_message"`
-	AckRetainedMessage      bool          `mapstructure:"ack_retained_message"`
-	ErrorRetainedMessage    bool          `mapstructure:"error_retained_message"`
-	StatusRetainedMessage   bool          `mapstructure:"status_retained_message"`
-	LocationRetainedMessage bool          `mapstructure:"location_retained_message"`
+	Server                  string
+	Username                string
+	Password                string
+	QOS                     uint8  `mapstructure:"qos"`
+	CleanSession            bool   `mapstructure:"clean_session"`
+	ClientID                string `mapstructure:"client_id"`
+	CACert                  string `mapstructure:"ca_cert"`
+	TLSCert                 string `mapstructure:"tls_cert"`
+	TLSKey                  string `mapstructure:"tls_key"`
+	UplinkTopicTemplate     string `mapstructure:"uplink_topic_template"`
+	DownlinkTopicTemplate   string `mapstructure:"downlink_topic_template"`
+	JoinTopicTemplate       string `mapstructure:"join_topic_template"`
+	AckTopicTemplate        string `mapstructure:"ack_topic_template"`
+	ErrorTopicTemplate      string `mapstructure:"error_topic_template"`
+	StatusTopicTemplate     string `mapstructure:"status_topic_template"`
+	LocationTopicTemplate   string `mapstructure:"location_topic_template"`
+	UplinkRetainedMessage   bool   `mapstructure:"uplink_retained_message"`
+	JoinRetainedMessage     bool   `mapstructure:"join_retained_message"`
+	AckRetainedMessage      bool   `mapstructure:"ack_retained_message"`
+	ErrorRetainedMessage    bool   `mapstructure:"error_retained_message"`
+	StatusRetainedMessage   bool   `mapstructure:"status_retained_message"`
+	LocationRetainedMessage bool   `mapstructure:"location_retained_message"`
 }
 
 // IntegrationAWSConfig holds the AWS SNS integration configuration.
@@ -171,15 +168,7 @@ type IntegrationGCPConfig struct {
 
 // IntegrationPostgreSQLConfig holds the PostgreSQL integration configuration.
 type IntegrationPostgreSQLConfig struct {
-	DSN                string `json:"dsn"`
-	MaxOpenConnections int    `mapstructure:"max_open_connections"`
-	MaxIdleConnections int    `mapstructure:"max_idle_connections"`
-}
-
-// IntegrationAMQPConfig holds the AMQP integration configuration.
-type IntegrationAMQPConfig struct {
-	URL                     string `mapstructure:"url"`
-	EventRoutingKeyTemplate string `mapstructure:"event_routing_key_template"`
+	DSN string `json:"dsn"`
 }
 
 // AzurePublishMode defines the publish-mode type.

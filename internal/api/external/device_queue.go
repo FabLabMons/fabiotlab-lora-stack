@@ -1,6 +1,8 @@
 package external
 
 import (
+	"encoding/json"
+
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/jmoiron/sqlx"
 	log "github.com/sirupsen/logrus"
@@ -8,8 +10,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 
-	pb "github.com/brocaar/chirpstack-api/go/v3/as/external/api"
-	"github.com/brocaar/chirpstack-api/go/v3/ns"
+	pb "github.com/brocaar/chirpstack-api/go/as/external/api"
+	"github.com/brocaar/chirpstack-api/go/ns"
 	"github.com/brocaar/chirpstack-application-server/internal/api/external/auth"
 	"github.com/brocaar/chirpstack-application-server/internal/api/helpers"
 	"github.com/brocaar/chirpstack-application-server/internal/backend/networkserver"
@@ -62,7 +64,7 @@ func (d *DeviceQueueAPI) Enqueue(ctx context.Context, req *pb.EnqueueDeviceQueue
 		}
 
 		// if JSON object is set, try to encode it to bytes
-		if req.DeviceQueueItem.JsonObject != "" && req.DeviceQueueItem.JsonObject != "null" {
+		if req.DeviceQueueItem.JsonObject != "" {
 			app, err := storage.GetApplication(ctx, storage.DB(), dev.ApplicationID)
 			if err != nil {
 				return helpers.ErrToRPCError(err)
@@ -78,13 +80,26 @@ func (d *DeviceQueueAPI) Enqueue(ctx context.Context, req *pb.EnqueueDeviceQueue
 			// device-profile codec fields.
 			payloadCodec := app.PayloadCodec
 			payloadEncoderScript := app.PayloadEncoderScript
+			payloadDecoderScript := app.PayloadDecoderScript
 
 			if dp.PayloadCodec != "" {
 				payloadCodec = dp.PayloadCodec
 				payloadEncoderScript = dp.PayloadEncoderScript
+				payloadDecoderScript = dp.PayloadDecoderScript
 			}
 
-			req.DeviceQueueItem.Data, err = codec.JSONToBinary(payloadCodec, uint8(req.DeviceQueueItem.FPort), dev.Variables, payloadEncoderScript, []byte(req.DeviceQueueItem.JsonObject))
+			// get codec payload configured for the application
+			codecPL := codec.NewPayload(payloadCodec, uint8(req.DeviceQueueItem.FPort), payloadEncoderScript, payloadDecoderScript)
+			if codecPL == nil {
+				return grpc.Errorf(codes.FailedPrecondition, "no or invalid codec configured for application")
+			}
+
+			err = json.Unmarshal([]byte(req.DeviceQueueItem.JsonObject), &codecPL)
+			if err != nil {
+				return helpers.ErrToRPCError(err)
+			}
+
+			req.DeviceQueueItem.Data, err = codecPL.EncodeToBytes()
 			if err != nil {
 				return helpers.ErrToRPCError(err)
 			}

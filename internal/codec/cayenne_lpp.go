@@ -1,17 +1,20 @@
-package cayennelpp
+package codec
 
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/json"
+	"encoding/gob"
 	"fmt"
 	"io"
-	"sort"
 
 	"github.com/pkg/errors"
 )
 
-// cayenneLPP types.
+func init() {
+	gob.Register(CayenneLPP{})
+}
+
+// CayenneLPP types.
 const (
 	lppDigitalInput      byte = 0
 	lppDigitalOutput     byte = 1
@@ -27,25 +30,29 @@ const (
 	lppGPSLocation       byte = 136
 )
 
-type accelerometer struct {
+// Accelerometer defines the accelerometer data.
+type Accelerometer struct {
 	X float64 `json:"x"`
 	Y float64 `json:"y"`
 	Z float64 `json:"z"`
 }
 
-type gyrometer struct {
+// Gyrometer defines the gyrometer data.
+type Gyrometer struct {
 	X float64 `json:"x"`
 	Y float64 `json:"y"`
 	Z float64 `json:"z"`
 }
 
-type gpsLocation struct {
+// GPSLocation defines the GPS location data.
+type GPSLocation struct {
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
 	Altitude  float64 `json:"altitude"`
 }
 
-type cayenneLPP struct {
+// CayenneLPP defines the Cayenne LPP data structure.
+type CayenneLPP struct {
 	DigitalInput      map[byte]uint8         `json:"digitalInput,omitempty" influxdb:"digital_input"`
 	DigitalOutput     map[byte]uint8         `json:"digitalOutput,omitempty" influxdb:"digital_output"`
 	AnalogInput       map[byte]float64       `json:"analogInput,omitempty" influxdb:"analog_input"`
@@ -54,19 +61,22 @@ type cayenneLPP struct {
 	PresenceSensor    map[byte]uint8         `json:"presenceSensor,omitempty" influxdb:"presence_sensor"`
 	TemperatureSensor map[byte]float64       `json:"temperatureSensor,omitempty" influxdb:"temperature_sensor"`
 	HumiditySensor    map[byte]float64       `json:"humiditySensor,omitempty" influxdb:"humidity_sensor"`
-	Accelerometer     map[byte]accelerometer `json:"accelerometer,omitempty" influxdb:"accelerometer"`
+	Accelerometer     map[byte]Accelerometer `json:"accelerometer,omitempty" influxdb:"accelerometer"`
 	Barometer         map[byte]float64       `json:"barometer,omitempty" influxdb:"barometer"`
-	Gyrometer         map[byte]gyrometer     `json:"gyrometer,omitempty" influxdb:"gyrometer"`
-	GPSLocation       map[byte]gpsLocation   `json:"gpsLocation,omitempty" influxdb:"gps_location"`
+	Gyrometer         map[byte]Gyrometer     `json:"gyrometer,omitempty" influxdb:"gyrometer"`
+	GPSLocation       map[byte]GPSLocation   `json:"gpsLocation,omitempty" influxdb:"gps_location"`
 }
 
-// BinaryToJSON encodes the given binary payload to JSON.
-func BinaryToJSON(b []byte) ([]byte, error) {
-	var lpp cayenneLPP
-	var err error
+// Object returns the CayenneLPP data object.
+func (c CayenneLPP) Object() interface{} {
+	return c
+}
 
+// DecodeBytes decodes the payload from a slice of bytes.
+func (c *CayenneLPP) DecodeBytes(data []byte) error {
+	var err error
 	buf := make([]byte, 2)
-	r := bytes.NewReader(b)
+	r := bytes.NewReader(data)
 
 	for {
 		_, err = io.ReadFull(r, buf)
@@ -74,199 +84,107 @@ func BinaryToJSON(b []byte) ([]byte, error) {
 			if err == io.EOF {
 				break
 			}
-			return nil, errors.Wrap(err, "read full error")
+			return errors.Wrap(err, "read full error")
 		}
 
 		switch buf[1] {
 		case lppDigitalInput:
-			err = lppDigitalInputDecode(buf[0], r, &lpp)
+			err = lppDigitalInputDecode(buf[0], r, c)
 		case lppDigitalOutput:
-			err = lppDigitalOutputDecode(buf[0], r, &lpp)
+			err = lppDigitalOutputDecode(buf[0], r, c)
 		case lppAnalogInput:
-			err = lppAnalogInputDecode(buf[0], r, &lpp)
+			err = lppAnalogInputDecode(buf[0], r, c)
 		case lppAnalogOutput:
-			err = lppAnalogOutputDecode(buf[0], r, &lpp)
+			err = lppAnalogOutputDecode(buf[0], r, c)
 		case lppIlluminanceSensor:
-			err = lppIlluminanceSensorDecode(buf[0], r, &lpp)
+			err = lppIlluminanceSensorDecode(buf[0], r, c)
 		case lppPresenseSensor:
-			err = lppPresenseSensorDecode(buf[0], r, &lpp)
+			err = lppPresenseSensorDecode(buf[0], r, c)
 		case lppTemperatureSensor:
-			err = lppTemperatureSensorDecode(buf[0], r, &lpp)
+			err = lppTemperatureSensorDecode(buf[0], r, c)
 		case lppHumiditySensor:
-			err = lppHumiditySensorDecode(buf[0], r, &lpp)
+			err = lppHumiditySensorDecode(buf[0], r, c)
 		case lppAccelerometer:
-			err = lppAccelerometerDecode(buf[0], r, &lpp)
+			err = lppAccelerometerDecode(buf[0], r, c)
 		case lppBarometer:
-			err = lppBarometerDecode(buf[0], r, &lpp)
+			err = lppBarometerDecode(buf[0], r, c)
 		case lppGyrometer:
-			err = lppGyrometerDecode(buf[0], r, &lpp)
+			err = lppGyrometerDecode(buf[0], r, c)
 		case lppGPSLocation:
-			err = lppGPSLocationDecode(buf[0], r, &lpp)
+			err = lppGPSLocationDecode(buf[0], r, c)
 		default:
-			return nil, fmt.Errorf("invalid data type: %d", buf[1])
+			return fmt.Errorf("invalid data type: %d", buf[1])
 		}
 
 		if err != nil {
-			return nil, errors.Wrap(err, "decode error")
+			return errors.Wrap(err, "decode error")
 		}
 	}
 
-	return json.Marshal(lpp)
+	return nil
 }
 
-// JSONToBinary encodes the given JSON payload to binary.
-func JSONToBinary(b []byte) ([]byte, error) {
-	var lpp cayenneLPP
-
-	if err := json.Unmarshal(b, &lpp); err != nil {
-		return nil, errors.Wrap(err, "json unmarshal error")
-	}
-
+// EncodeToBytes encodes the payload to a slice of bytes.
+func (c CayenneLPP) EncodeToBytes() ([]byte, error) {
 	w := bytes.NewBuffer([]byte{})
 
-	// We sort by channel to make sure that each time this function gets called,
-	// it returns the same output. Note that Go maps are not sorted!
-
-	// DigitalInput
-	channels := make([]uint8, 0, len(lpp.DigitalInput))
-	for k, _ := range lpp.DigitalInput {
-		channels = append(channels, k)
-	}
-	sort.Slice(channels, func(i, j int) bool { return channels[i] < channels[j] })
-	for _, c := range channels {
-		if err := lppDigitalInputEncode(c, w, lpp.DigitalInput[c]); err != nil {
+	for k, v := range c.DigitalInput {
+		if err := lppDigitalInputEncode(k, w, v); err != nil {
 			return nil, err
 		}
 	}
-
-	// DigitalOutput
-	channels = make([]uint8, 0, len(lpp.DigitalOutput))
-	for k, _ := range lpp.DigitalOutput {
-		channels = append(channels, k)
-	}
-	sort.Slice(channels, func(i, j int) bool { return channels[i] < channels[j] })
-	for _, c := range channels {
-		if err := lppDigitalOutputEncode(c, w, lpp.DigitalOutput[c]); err != nil {
+	for k, v := range c.DigitalOutput {
+		if err := lppDigitalOutputEncode(k, w, v); err != nil {
 			return nil, err
 		}
 	}
-
-	// AnalogInput
-	channels = make([]uint8, 0, len(lpp.AnalogInput))
-	for k, _ := range lpp.AnalogInput {
-		channels = append(channels, k)
-	}
-	sort.Slice(channels, func(i, j int) bool { return channels[i] < channels[j] })
-	for _, c := range channels {
-		if err := lppAnalogInputEncode(c, w, lpp.AnalogInput[c]); err != nil {
+	for k, v := range c.AnalogInput {
+		if err := lppAnalogInputEncode(k, w, v); err != nil {
 			return nil, err
 		}
 	}
-
-	// AnalogOutput
-	channels = make([]uint8, 0, len(lpp.AnalogOutput))
-	for k, _ := range lpp.AnalogOutput {
-		channels = append(channels, k)
-	}
-	sort.Slice(channels, func(i, j int) bool { return channels[i] < channels[j] })
-	for _, c := range channels {
-		if err := lppAnalogOutputEncode(c, w, lpp.AnalogOutput[c]); err != nil {
+	for k, v := range c.AnalogOutput {
+		if err := lppAnalogOutputEncode(k, w, v); err != nil {
 			return nil, err
 		}
 	}
-
-	// IlluminanceSensor
-	channels = make([]uint8, 0, len(lpp.IlluminanceSensor))
-	for k, _ := range lpp.IlluminanceSensor {
-		channels = append(channels, k)
-	}
-	sort.Slice(channels, func(i, j int) bool { return channels[i] < channels[j] })
-	for _, c := range channels {
-		if err := lppIlluminanceSensorEncode(c, w, lpp.IlluminanceSensor[c]); err != nil {
+	for k, v := range c.IlluminanceSensor {
+		if err := lppIlluminanceSensorEncode(k, w, v); err != nil {
 			return nil, err
 		}
 	}
-
-	// PresenceSensor
-	channels = make([]uint8, 0, len(lpp.PresenceSensor))
-	for k, _ := range lpp.PresenceSensor {
-		channels = append(channels, k)
-	}
-	sort.Slice(channels, func(i, j int) bool { return channels[i] < channels[j] })
-	for _, c := range channels {
-		if err := lppPresenseSensorEncode(c, w, lpp.PresenceSensor[c]); err != nil {
+	for k, v := range c.PresenceSensor {
+		if err := lppPresenseSensorEncode(k, w, v); err != nil {
 			return nil, err
 		}
 	}
-
-	// TemperatureSensor
-	channels = make([]uint8, 0, len(lpp.TemperatureSensor))
-	for k, _ := range lpp.TemperatureSensor {
-		channels = append(channels, k)
-	}
-	sort.Slice(channels, func(i, j int) bool { return channels[i] < channels[j] })
-	for _, c := range channels {
-		if err := lppTemperatureSensorEncode(c, w, lpp.TemperatureSensor[c]); err != nil {
+	for k, v := range c.TemperatureSensor {
+		if err := lppTemperatureSensorEncode(k, w, v); err != nil {
 			return nil, err
 		}
 	}
-
-	// HumiditySensor
-	channels = make([]uint8, 0, len(lpp.HumiditySensor))
-	for k, _ := range lpp.HumiditySensor {
-		channels = append(channels, k)
-	}
-	sort.Slice(channels, func(i, j int) bool { return channels[i] < channels[j] })
-	for _, c := range channels {
-		if err := lppHumiditySensorEncode(c, w, lpp.HumiditySensor[c]); err != nil {
+	for k, v := range c.HumiditySensor {
+		if err := lppHumiditySensorEncode(k, w, v); err != nil {
 			return nil, err
 		}
 	}
-
-	// Accelerometer
-	channels = make([]uint8, 0, len(lpp.Accelerometer))
-	for k, _ := range lpp.Accelerometer {
-		channels = append(channels, k)
-	}
-	sort.Slice(channels, func(i, j int) bool { return channels[i] < channels[j] })
-	for _, c := range channels {
-		if err := lppAccelerometerEncode(c, w, lpp.Accelerometer[c]); err != nil {
+	for k, v := range c.Accelerometer {
+		if err := lppAccelerometerEncode(k, w, v); err != nil {
 			return nil, err
 		}
 	}
-
-	// Barometer
-	channels = make([]uint8, 0, len(lpp.Barometer))
-	for k, _ := range lpp.Barometer {
-		channels = append(channels, k)
-	}
-	sort.Slice(channels, func(i, j int) bool { return channels[i] < channels[j] })
-	for _, c := range channels {
-		if err := lppBarometerEncode(c, w, lpp.Barometer[c]); err != nil {
+	for k, v := range c.Barometer {
+		if err := lppBarometerEncode(k, w, v); err != nil {
 			return nil, err
 		}
 	}
-
-	// Gyrometer
-	channels = make([]uint8, 0, len(lpp.Gyrometer))
-	for k, _ := range lpp.Gyrometer {
-		channels = append(channels, k)
-	}
-	sort.Slice(channels, func(i, j int) bool { return channels[i] < channels[j] })
-	for _, c := range channels {
-		if err := lppGyrometerEncode(c, w, lpp.Gyrometer[c]); err != nil {
+	for k, v := range c.Gyrometer {
+		if err := lppGyrometerEncode(k, w, v); err != nil {
 			return nil, err
 		}
 	}
-
-	// GPSLocation.
-	channels = make([]uint8, 0, len(lpp.GPSLocation))
-	for k, _ := range lpp.GPSLocation {
-		channels = append(channels, k)
-	}
-	sort.Slice(channels, func(i, j int) bool { return channels[i] < channels[j] })
-	for _, c := range channels {
-		if err := lppGPSLocationEncode(c, w, lpp.GPSLocation[c]); err != nil {
+	for k, v := range c.GPSLocation {
+		if err := lppGPSLocationEncode(k, w, v); err != nil {
 			return nil, err
 		}
 	}
@@ -274,7 +192,7 @@ func JSONToBinary(b []byte) ([]byte, error) {
 	return w.Bytes(), nil
 }
 
-func lppDigitalInputDecode(channel uint8, r io.Reader, out *cayenneLPP) error {
+func lppDigitalInputDecode(channel uint8, r io.Reader, out *CayenneLPP) error {
 	var b uint8
 	if err := binary.Read(r, binary.BigEndian, &b); err != nil {
 		return errors.Wrap(err, "read uint8 error")
@@ -294,7 +212,7 @@ func lppDigitalInputEncode(channel uint8, w io.Writer, data uint8) error {
 	return nil
 }
 
-func lppDigitalOutputDecode(channel uint8, r io.Reader, out *cayenneLPP) error {
+func lppDigitalOutputDecode(channel uint8, r io.Reader, out *CayenneLPP) error {
 	var b uint8
 	if err := binary.Read(r, binary.BigEndian, &b); err != nil {
 		return errors.Wrap(err, "read uint8 error")
@@ -314,7 +232,7 @@ func lppDigitalOutputEncode(channel uint8, w io.Writer, data uint8) error {
 	return nil
 }
 
-func lppAnalogInputDecode(channel uint8, r io.Reader, out *cayenneLPP) error {
+func lppAnalogInputDecode(channel uint8, r io.Reader, out *CayenneLPP) error {
 	var analog int16
 	if err := binary.Read(r, binary.BigEndian, &analog); err != nil {
 		return errors.Wrap(err, "read int16 error")
@@ -334,7 +252,7 @@ func lppAnalogInputEncode(channel uint8, w io.Writer, data float64) error {
 	return nil
 }
 
-func lppAnalogOutputDecode(channel uint8, r io.Reader, out *cayenneLPP) error {
+func lppAnalogOutputDecode(channel uint8, r io.Reader, out *CayenneLPP) error {
 	var analog int16
 	if err := binary.Read(r, binary.BigEndian, &analog); err != nil {
 		return errors.Wrap(err, "read int16 error")
@@ -354,7 +272,7 @@ func lppAnalogOutputEncode(channel uint8, w io.Writer, data float64) error {
 	return nil
 }
 
-func lppIlluminanceSensorDecode(channel uint8, r io.Reader, out *cayenneLPP) error {
+func lppIlluminanceSensorDecode(channel uint8, r io.Reader, out *CayenneLPP) error {
 	var illum uint16
 	if err := binary.Read(r, binary.BigEndian, &illum); err != nil {
 		return errors.Wrap(err, "read uint16 error")
@@ -374,7 +292,7 @@ func lppIlluminanceSensorEncode(channel uint8, w io.Writer, data uint16) error {
 	return nil
 }
 
-func lppPresenseSensorDecode(channel uint8, r io.Reader, out *cayenneLPP) error {
+func lppPresenseSensorDecode(channel uint8, r io.Reader, out *CayenneLPP) error {
 	var b uint8
 	if err := binary.Read(r, binary.BigEndian, &b); err != nil {
 		return errors.Wrap(err, "read uint8 error")
@@ -394,7 +312,7 @@ func lppPresenseSensorEncode(channel uint8, w io.Writer, data uint8) error {
 	return nil
 }
 
-func lppTemperatureSensorDecode(channel uint8, r io.Reader, out *cayenneLPP) error {
+func lppTemperatureSensorDecode(channel uint8, r io.Reader, out *CayenneLPP) error {
 	var temp int16
 	if err := binary.Read(r, binary.BigEndian, &temp); err != nil {
 		return errors.Wrap(err, "read int16 error")
@@ -414,7 +332,7 @@ func lppTemperatureSensorEncode(channel uint8, w io.Writer, data float64) error 
 	return nil
 }
 
-func lppHumiditySensorDecode(channel uint8, r io.Reader, out *cayenneLPP) error {
+func lppHumiditySensorDecode(channel uint8, r io.Reader, out *CayenneLPP) error {
 	var b uint8
 	if err := binary.Read(r, binary.BigEndian, &b); err != nil {
 		return errors.Wrap(err, "read uint8 error")
@@ -434,7 +352,7 @@ func lppHumiditySensorEncode(channel uint8, w io.Writer, data float64) error {
 	return nil
 }
 
-func lppAccelerometerDecode(channel uint8, r io.Reader, out *cayenneLPP) error {
+func lppAccelerometerDecode(channel uint8, r io.Reader, out *CayenneLPP) error {
 	data := make([]int16, 3)
 	for i := range data {
 		if err := binary.Read(r, binary.BigEndian, &data[i]); err != nil {
@@ -442,9 +360,9 @@ func lppAccelerometerDecode(channel uint8, r io.Reader, out *cayenneLPP) error {
 		}
 	}
 	if out.Accelerometer == nil {
-		out.Accelerometer = make(map[uint8]accelerometer)
+		out.Accelerometer = make(map[uint8]Accelerometer)
 	}
-	out.Accelerometer[channel] = accelerometer{
+	out.Accelerometer[channel] = Accelerometer{
 		X: float64(data[0]) / 1000,
 		Y: float64(data[1]) / 1000,
 		Z: float64(data[2]) / 1000,
@@ -452,7 +370,7 @@ func lppAccelerometerDecode(channel uint8, r io.Reader, out *cayenneLPP) error {
 	return nil
 }
 
-func lppAccelerometerEncode(channel uint8, w io.Writer, data accelerometer) error {
+func lppAccelerometerEncode(channel uint8, w io.Writer, data Accelerometer) error {
 	w.Write([]byte{channel, lppAccelerometer})
 	vals := []int16{
 		int16(data.X * 1000),
@@ -467,7 +385,7 @@ func lppAccelerometerEncode(channel uint8, w io.Writer, data accelerometer) erro
 	return nil
 }
 
-func lppBarometerDecode(channel uint8, r io.Reader, out *cayenneLPP) error {
+func lppBarometerDecode(channel uint8, r io.Reader, out *CayenneLPP) error {
 	var bar uint16
 	if err := binary.Read(r, binary.BigEndian, &bar); err != nil {
 		return errors.Wrap(err, "read int16 error")
@@ -487,7 +405,7 @@ func lppBarometerEncode(channel uint8, w io.Writer, data float64) error {
 	return nil
 }
 
-func lppGyrometerDecode(channel uint8, r io.Reader, out *cayenneLPP) error {
+func lppGyrometerDecode(channel uint8, r io.Reader, out *CayenneLPP) error {
 	data := make([]int16, 3)
 	for i := range data {
 		if err := binary.Read(r, binary.BigEndian, &data[i]); err != nil {
@@ -495,9 +413,9 @@ func lppGyrometerDecode(channel uint8, r io.Reader, out *cayenneLPP) error {
 		}
 	}
 	if out.Gyrometer == nil {
-		out.Gyrometer = make(map[uint8]gyrometer)
+		out.Gyrometer = make(map[uint8]Gyrometer)
 	}
-	out.Gyrometer[channel] = gyrometer{
+	out.Gyrometer[channel] = Gyrometer{
 		X: float64(data[0]) / 100,
 		Y: float64(data[1]) / 100,
 		Z: float64(data[2]) / 100,
@@ -505,7 +423,7 @@ func lppGyrometerDecode(channel uint8, r io.Reader, out *cayenneLPP) error {
 	return nil
 }
 
-func lppGyrometerEncode(channel uint8, w io.Writer, data gyrometer) error {
+func lppGyrometerEncode(channel uint8, w io.Writer, data Gyrometer) error {
 	w.Write([]byte{channel, lppGyrometer})
 	vals := []int16{
 		int16(data.X * 100),
@@ -520,7 +438,7 @@ func lppGyrometerEncode(channel uint8, w io.Writer, data gyrometer) error {
 	return nil
 }
 
-func lppGPSLocationDecode(channel uint8, r io.Reader, out *cayenneLPP) error {
+func lppGPSLocationDecode(channel uint8, r io.Reader, out *CayenneLPP) error {
 	data := make([]int32, 3)
 	buf := make([]byte, 9)
 
@@ -535,9 +453,9 @@ func lppGPSLocationDecode(channel uint8, r io.Reader, out *cayenneLPP) error {
 	}
 
 	if out.GPSLocation == nil {
-		out.GPSLocation = make(map[uint8]gpsLocation)
+		out.GPSLocation = make(map[uint8]GPSLocation)
 	}
-	out.GPSLocation[channel] = gpsLocation{
+	out.GPSLocation[channel] = GPSLocation{
 		Latitude:  float64(data[0]) / 10000,
 		Longitude: float64(data[1]) / 10000,
 		Altitude:  float64(data[2]) / 100,
@@ -545,7 +463,7 @@ func lppGPSLocationDecode(channel uint8, r io.Reader, out *cayenneLPP) error {
 	return nil
 }
 
-func lppGPSLocationEncode(channel uint8, w io.Writer, data gpsLocation) error {
+func lppGPSLocationEncode(channel uint8, w io.Writer, data GPSLocation) error {
 	w.Write([]byte{channel, lppGPSLocation})
 	vals := []int32{
 		int32(data.Latitude * 10000),

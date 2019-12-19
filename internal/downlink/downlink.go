@@ -1,6 +1,7 @@
 package downlink
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/gofrs/uuid"
@@ -9,8 +10,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 
-	pb "github.com/brocaar/chirpstack-api/go/v3/as/integration"
-	"github.com/brocaar/chirpstack-api/go/v3/ns"
+	pb "github.com/brocaar/chirpstack-api/go/as/integration"
+	"github.com/brocaar/chirpstack-api/go/ns"
 	"github.com/brocaar/chirpstack-application-server/internal/backend/networkserver"
 	"github.com/brocaar/chirpstack-application-server/internal/codec"
 	"github.com/brocaar/chirpstack-application-server/internal/eventlog"
@@ -78,16 +79,31 @@ func handleDataDownPayload(ctx context.Context, pl integration.DataDownPayload) 
 			// device-profile codec fields.
 			payloadCodec := app.PayloadCodec
 			payloadEncoderScript := app.PayloadEncoderScript
+			payloadDecoderScript := app.PayloadDecoderScript
 
 			if dp.PayloadCodec != "" {
 				payloadCodec = dp.PayloadCodec
 				payloadEncoderScript = dp.PayloadEncoderScript
+				payloadDecoderScript = dp.PayloadDecoderScript
 			}
 
-			pl.Data, err = codec.JSONToBinary(payloadCodec, pl.FPort, d.Variables, payloadEncoderScript, []byte(pl.Object))
+			// get the codec payload configured for the application
+			codecPL := codec.NewPayload(payloadCodec, pl.FPort, payloadEncoderScript, payloadDecoderScript)
+			if codecPL == nil {
+				logCodecError(ctx, app, d, errors.New("no or invalid codec configured for application"))
+				return errors.New("no or invalid codec configured for application")
+			}
+
+			err = json.Unmarshal(pl.Object, &codecPL)
 			if err != nil {
 				logCodecError(ctx, app, d, err)
-				return errors.Wrap(err, "encode object error")
+				return errors.Wrap(err, "unmarshal to codec payload error")
+			}
+
+			pl.Data, err = codecPL.EncodeToBytes()
+			if err != nil {
+				logCodecError(ctx, app, d, err)
+				return errors.Wrap(err, "marshal codec payload to binary error")
 			}
 		}
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/aes"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -13,9 +14,9 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/brocaar/chirpstack-api/go/v3/as"
-	pb "github.com/brocaar/chirpstack-api/go/v3/as/integration"
-	"github.com/brocaar/chirpstack-api/go/v3/common"
+	"github.com/brocaar/chirpstack-api/go/as"
+	pb "github.com/brocaar/chirpstack-api/go/as/integration"
+	"github.com/brocaar/chirpstack-api/go/common"
 	"github.com/brocaar/chirpstack-application-server/internal/applayer/clocksync"
 	"github.com/brocaar/chirpstack-application-server/internal/applayer/fragmentation"
 	"github.com/brocaar/chirpstack-application-server/internal/applayer/multicastsetup"
@@ -252,20 +253,22 @@ func handleApplicationLayers(ctx *uplinkContext) error {
 
 func handleCodec(ctx *uplinkContext) error {
 	codecType := ctx.application.PayloadCodec
+	encoderScript := ctx.application.PayloadEncoderScript
 	decoderScript := ctx.application.PayloadDecoderScript
 
 	if ctx.deviceProfile.PayloadCodec != "" {
 		codecType = ctx.deviceProfile.PayloadCodec
+		encoderScript = ctx.deviceProfile.PayloadEncoderScript
 		decoderScript = ctx.deviceProfile.PayloadDecoderScript
 	}
 
-	if codecType == codec.None {
+	codecPL := codec.NewPayload(codecType, uint8(ctx.uplinkDataReq.FPort), encoderScript, decoderScript)
+	if codecPL == nil {
 		return nil
 	}
 
 	start := time.Now()
-	b, err := codec.BinaryToJSON(codecType, uint8(ctx.uplinkDataReq.FPort), ctx.device.Variables, decoderScript, ctx.data)
-	if err != nil {
+	if err := codecPL.DecodeBytes(ctx.data); err != nil {
 		log.WithFields(log.Fields{
 			"codec":          codecType,
 			"application_id": ctx.device.ApplicationID,
@@ -313,6 +316,11 @@ func handleCodec(ctx *uplinkContext) error {
 		"duration":       time.Since(start),
 	}).Debug("payload codec completed Decode execution")
 
+	b, err := json.Marshal(codecPL.Object())
+	if err != nil {
+		log.WithError(err).Error("marshal codec output to json error")
+		return nil
+	}
 	ctx.objectJSON = string(b)
 
 	return nil
