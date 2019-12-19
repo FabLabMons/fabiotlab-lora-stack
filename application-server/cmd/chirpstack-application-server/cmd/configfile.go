@@ -95,11 +95,6 @@ max_idle={{ .Redis.MaxIdle }}
 # the timeout to a value less than the server's timeout.
 idle_timeout="{{ .Redis.IdleTimeout }}"
 
-# Max active connections in the pool.
-#
-# When zero, there is no limit on the number of connections in the pool.
-max_active={{ .Redis.MaxActive }}
-
 
 # Application-server settings.
 [application_server]
@@ -139,7 +134,6 @@ id="{{ .ApplicationServer.ID }}"
   # Do not forget to configure the related configuration section below for
   # the enabled integrations. Integrations that can be enabled are:
   # * mqtt              - MQTT broker
-  # * amqp              - AMQP / RabbitMQ
   # * aws_sns           - AWS Simple Notification Service (SNS)
   # * azure_service_bus - Azure Service-Bus
   # * gcp_pub_sub       - Google Cloud Pub/Sub
@@ -189,10 +183,6 @@ id="{{ .ApplicationServer.ID }}"
   # Connect with the given password (optional)
   password="{{ .ApplicationServer.Integration.MQTT.Password }}"
 
-  # Maximum interval that will be waited between reconnection attempts when connection is lost.
-  # Valid units are 'ms', 's', 'm', 'h'. Note that these values can be combined, e.g. '24h30m15s'.
-  max_reconnect_interval="{{ .ApplicationServer.Integration.MQTT.MaxReconnectInterval }}"
-
   # Quality of service level
   #
   # 0: at most once
@@ -229,21 +219,6 @@ id="{{ .ApplicationServer.ID }}"
 
   # TLS key file (optional)
   tls_key="{{ .ApplicationServer.Integration.MQTT.TLSKey }}"
-
-
-  # AMQP / RabbitMQ.
-  [application_server.integration.amqp]
-  # Server URL.
-  #
-  # See for a specification of all the possible options:
-  # https://www.rabbitmq.com/uri-spec.html
-  url="{{ .ApplicationServer.Integration.AMQP.URL }}"
-
-  # Event routing key template.
-  #
-  # This is the event routing-key template used when publishing device
-  # events.
-  event_routing_key_template="{{ .ApplicationServer.Integration.AMQP.EventRoutingKeyTemplate }}"
 
 
   # AWS Simple Notification Service (SNS)
@@ -302,16 +277,6 @@ id="{{ .ApplicationServer.ID }}"
   [application_server.integration.postgresql]
   # PostgreSQL dsn (e.g.: postgres://user:password@hostname/database?sslmode=disable).
   dsn="{{ .ApplicationServer.Integration.PostgreSQL.DSN }}"
-
-  # This sets the max. number of open connections that are allowed in the
-  # PostgreSQL connection pool (0 = unlimited).
-  max_open_connections={{ .ApplicationServer.Integration.PostgreSQL.MaxOpenConnections }}
-
-  # Max idle connections.
-  #
-  # This sets the max. number of idle connections in the PostgreSQL connection
-  # pool (0 = no idle connections are retained).
-  max_idle_connections={{ .ApplicationServer.Integration.PostgreSQL.MaxIdleConnections }}
 
 
   # Settings for the "internal api"

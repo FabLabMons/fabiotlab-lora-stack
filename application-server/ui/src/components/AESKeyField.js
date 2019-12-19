@@ -76,6 +76,7 @@ class AESKeyHEXMask extends Component {
     return(
       <MaskedInput
         {...other}
+        ref={inputRef}
         mask={[
           /[A-Fa-f0-9]/,
           /[A-Fa-f0-9]/,

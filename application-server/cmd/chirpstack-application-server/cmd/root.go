@@ -50,7 +50,6 @@ func init() {
 	viper.SetDefault("join_server.bind", "0.0.0.0:8003")
 	viper.SetDefault("application_server.integration.marshaler", "json_v3")
 	viper.SetDefault("application_server.integration.mqtt.server", "tcp://localhost:1883")
-	viper.SetDefault("application_server.integration.mqtt.max_reconnect_interval", time.Minute)
 	viper.SetDefault("application_server.integration.mqtt.uplink_topic_template", "application/{{ .ApplicationID }}/device/{{ .DevEUI }}/rx")
 	viper.SetDefault("application_server.integration.mqtt.downlink_topic_template", "application/{{ .ApplicationID }}/device/{{ .DevEUI }}/tx")
 	viper.SetDefault("application_server.integration.mqtt.join_topic_template", "application/{{ .ApplicationID }}/device/{{ .DevEUI }}/join")
@@ -59,9 +58,6 @@ func init() {
 	viper.SetDefault("application_server.integration.mqtt.status_topic_template", "application/{{ .ApplicationID }}/device/{{ .DevEUI }}/status")
 	viper.SetDefault("application_server.integration.mqtt.location_topic_template", "application/{{ .ApplicationID }}/device/{{ .DevEUI }}/location")
 	viper.SetDefault("application_server.integration.mqtt.clean_session", true)
-	viper.SetDefault("application_server.integration.postgresql.max_idle_connections", 2)
-	viper.SetDefault("application_server.integration.amqp.url", "amqp://guest:guest@localhost:5672")
-	viper.SetDefault("application_server.integration.amqp.event_routing_key_template", "application.{{ .ApplicationID }}.device.{{ .DevEUI }}.event.{{ .EventType }}")
 	viper.SetDefault("application_server.integration.enabled", []string{"mqtt"})
 	viper.SetDefault("application_server.codec.js.max_execution_time", 100*time.Millisecond)
 

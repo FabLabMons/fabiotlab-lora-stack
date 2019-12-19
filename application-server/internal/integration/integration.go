@@ -3,7 +3,7 @@ package integration
 import (
 	"context"
 
-	pb "github.com/brocaar/chirpstack-api/go/v3/as/integration"
+	pb "github.com/brocaar/chirpstack-api/go/as/integration"
 )
 
 // Handler kinds
@@ -20,7 +20,7 @@ type Integrator interface {
 	SendACKNotification(ctx context.Context, vars map[string]string, pl pb.AckEvent) error           // send ack notification
 	SendErrorNotification(ctx context.Context, vars map[string]string, pl pb.ErrorEvent) error       // send error notification
 	SendStatusNotification(ctx context.Context, vars map[string]string, pl pb.StatusEvent) error     // send status notification
-	SendLocationNotification(ctx context.Context, vars map[string]string, pl pb.LocationEvent) error // send location notification
+	SendLocationNotification(ctx context.Context, vars map[string]string, pl pb.LocationEvent) error // send location notofication
 	DataDownChan() chan DataDownPayload                                                              // returns DataDownPayload channel
 	Close() error                                                                                    // closes the handler
 }

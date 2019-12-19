@@ -16,12 +16,8 @@ class Loaded extends Component {
     this.testLoaded(this.props.loaded);
   }
   
-  componentDidUpdate(prevProps) {
-    if (prevProps === this.props) {
-      return;
-    }
-
-    this.testLoaded(this.props.loaded);
+  componentWillReceiveProps(newProps) {
+    this.testLoaded(newProps.loaded);
   }
   
   testLoaded(obj) {

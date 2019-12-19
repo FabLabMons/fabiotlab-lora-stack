@@ -183,7 +183,7 @@ class GatewayDiscovery extends Component {
 }
 
 class LegendControl extends MapControl {
-  componentDidMount() {
+  componentWillMount() {
     const legend = L.control({position: "bottomleft"});
     const jsx = (
       <div {...this.props}>

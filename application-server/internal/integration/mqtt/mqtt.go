@@ -21,7 +21,7 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	pb "github.com/brocaar/chirpstack-api/go/v3/as/integration"
+	pb "github.com/brocaar/chirpstack-api/go/as/integration"
 	"github.com/brocaar/chirpstack-application-server/internal/config"
 	"github.com/brocaar/chirpstack-application-server/internal/integration"
 	"github.com/brocaar/chirpstack-application-server/internal/integration/marshaler"
@@ -134,7 +134,6 @@ func New(m marshaler.Type, p *redis.Pool, conf config.IntegrationMQTTConfig) (*I
 	opts.SetClientID(i.config.ClientID)
 	opts.SetOnConnectHandler(i.onConnected)
 	opts.SetConnectionLostHandler(i.onConnectionLost)
-	opts.SetMaxReconnectInterval(i.config.MaxReconnectInterval)
 
 	tlsconfig, err := newTLSConfig(i.config.CACert, i.config.TLSCert, i.config.TLSKey)
 	if err != nil {
