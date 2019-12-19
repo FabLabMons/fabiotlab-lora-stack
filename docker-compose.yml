@@ -23,7 +23,13 @@ services:
   packet_forwarder:
     build: ./packet_forwarder
     restart: unless-stopped
-    env_file: ./packet_forwarder.env
+    environment:
+      - SERVER_1_ENABLED=true
+      - SERVER_1_ADDRESS=gateway-bridge
+      - SERVER_1_PORTUP=1700
+      - SERVER_1_PORTDOWN=1700
+      - SERVER_1_DOWNLINK=true
+      
     privileged: true
     depends_on: 
       - gateway-bridge
