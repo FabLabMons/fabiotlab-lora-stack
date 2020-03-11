@@ -79,7 +79,7 @@ services:
       - "postgresqldata:/var/lib/postgresql/data"
 
   redis:
-    image: arm32v7/redis:5-alpine
+    image: arm32v7/redis:5
     restart: unless-stopped
     volumes:
       - "redisdata:/data"
