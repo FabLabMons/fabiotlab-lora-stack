@@ -8,14 +8,13 @@ require (
 	github.com/NickBall/go-aes-key-wrap v0.0.0-20170929221519-1c3aa3e4dfc5
 	github.com/aws/aws-sdk-go v1.19.19
 	github.com/brocaar/chirpstack-api/go v0.0.0-20191119153543-35c59165bf94
-	github.com/brocaar/loraserver v2.5.0+incompatible
 	github.com/brocaar/lorawan v0.0.0-20191115102621-6095d473cf60
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/eclipse/paho.mqtt.golang v1.2.0
 	github.com/elazarl/go-bindata-assetfs v1.0.0
 	github.com/gobuffalo/packr v1.22.0 // indirect
 	github.com/gofrs/uuid v3.2.0+incompatible
-	github.com/gogo/protobuf v1.2.1
+	github.com/gogo/protobuf v1.3.2
 	github.com/golang/protobuf v1.3.2
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/gopherjs/gopherjs v0.0.0-20190430165422-3e4dfb77656c // indirect
@@ -43,10 +42,10 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5
 	github.com/ziutek/mymysql v1.5.4 // indirect
-	golang.org/x/crypto v0.0.0-20190605123033-f99c8df09eb5
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	golang.org/x/lint v0.0.0-20190409202823-959b441ac422
-	golang.org/x/net v0.0.0-20190628185345-da137c7871d7
-	golang.org/x/tools v0.0.0-20190708203411-c8855242db9c
+	golang.org/x/net v0.0.0-20201021035429-f5854403a974
+	golang.org/x/tools v0.0.0-20210106214847-113979e3529a
 	google.golang.org/api v0.9.0
 	google.golang.org/grpc v1.24.0
 	gopkg.in/gorp.v1 v1.7.2 // indirect
