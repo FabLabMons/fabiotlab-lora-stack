@@ -38,8 +38,8 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	golang.org/x/lint v0.0.0-20190409202823-959b441ac422
-	golang.org/x/net v0.0.0-20190628185345-da137c7871d7
-	golang.org/x/tools v0.0.0-20190708203411-c8855242db9c
+	golang.org/x/net v0.7.0
+	golang.org/x/tools v0.1.12
 	gonum.org/v1/gonum v0.0.0-20190115205657-1b07048b32c6
 	gonum.org/v1/netlib v0.0.0-20190219113230-9992c5f5eae4 // indirect
 	google.golang.org/api v0.9.0
